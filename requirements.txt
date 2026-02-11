@@ -1,0 +1,8 @@
+hydra-core
+hydra-colorlog
+python-dotenv
+numpy
+pyarrow
+huggingface_hub
+mwparserfromhell
+pytest

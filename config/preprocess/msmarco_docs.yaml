@@ -1,0 +1,46 @@
+defaults:
+  - _base
+  - _self_
+
+dataset:
+  name: msmarco_docs
+  source: msmarco
+  version: docs_v1
+
+download:
+  source_url: https://msmarco.z22.web.core.windows.net/msmarcoranking/msmarco-docs.tsv.gz
+  target_dir: data/raw/msmarco
+  filename: msmarco-docs.tsv.gz
+  expected_sha256: null
+  expected_size_bytes: null
+  retries: 3
+  retry_backoff_seconds: 5
+  timeout_seconds: 30
+  overwrite: false
+
+processing:
+  num_proc: ${oc.env:PREPROCESS_NUM_PROC,16}
+  chunk_size: 5000
+  min_body_chars: 20
+  drop_empty_title: false
+  normalize_whitespace: true
+  malformed_row_policy: skip
+
+output:
+  output_dir: data/processed/msmarco_docs
+  file_prefix: msmarco-docs
+  shard_target_rows: 200000
+  parquet_compression: zstd
+  parquet_extension: parquet
+  manifest_name: manifest.json
+  summary_name: run_summary.json
+  dataset_readme_name: README.md
+
+hub:
+  push: false
+  repo_id: null
+  private: true
+  revision: main
+  token_env_var: HF_TOKEN
+  commit_message: "Add preprocessed msmarco docs shards"
+  path_in_repo: data

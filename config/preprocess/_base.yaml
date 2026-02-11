@@ -1,0 +1,59 @@
+seed: 10
+tag: null
+log_dir_base: "log/preprocess"
+log_dir: ${tagged_log_dir:${log_dir_base},${tag}}
+
+dataset:
+  name: null
+  source: null
+  version: null
+
+run:
+  resume: true
+  dry_run: false
+  max_rows: null
+  log_every: 10000
+
+download:
+  source_url: null
+  target_dir: data/raw
+  filename: null
+  expected_sha256: null
+  expected_size_bytes: null
+  retries: 3
+  retry_backoff_seconds: 5
+  timeout_seconds: 30
+  overwrite: false
+
+processing:
+  num_proc: 8
+  chunk_size: 5000
+  min_body_chars: 20
+  drop_empty_title: false
+  normalize_whitespace: true
+
+output:
+  output_dir: data/processed
+  file_prefix: data
+  shard_target_rows: 200000
+  parquet_compression: zstd
+  parquet_extension: parquet
+  manifest_name: manifest.json
+  summary_name: run_summary.json
+  dataset_readme_name: README.md
+
+hub:
+  push: false
+  repo_id: null
+  private: true
+  revision: main
+  token_env_var: HF_TOKEN
+  commit_message: "Add preprocessed dataset shards"
+  path_in_repo: ""
+  retries: 3
+  retry_backoff_seconds: 5
+
+hydra:
+  output_subdir: null
+  run:
+    dir: ${log_dir}

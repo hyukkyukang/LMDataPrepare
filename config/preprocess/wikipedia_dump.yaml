@@ -1,0 +1,50 @@
+defaults:
+  - _base
+  - _self_
+
+dataset:
+  name: wikipedia_dump
+  source: wikimedia
+  version: latest
+  language: en
+  dump_date: latest
+  require_high_fidelity_parser: true
+  namespace: 0
+  include_redirects: false
+
+download:
+  source_url: https://dumps.wikimedia.org/enwiki/latest/enwiki-latest-pages-articles-multistream.xml.bz2
+  target_dir: data/raw/wikipedia
+  filename: enwiki-latest-pages-articles-multistream.xml.bz2
+  expected_sha256: null
+  expected_size_bytes: null
+  retries: 3
+  retry_backoff_seconds: 5
+  timeout_seconds: 30
+  overwrite: false
+
+processing:
+  num_proc: ${oc.env:PREPROCESS_NUM_PROC,16}
+  chunk_size: 2000
+  min_body_chars: 100
+  drop_empty_title: true
+  normalize_whitespace: true
+
+output:
+  output_dir: data/processed/wikipedia_dump
+  file_prefix: wikipedia-en
+  shard_target_rows: 200000
+  parquet_compression: zstd
+  parquet_extension: parquet
+  manifest_name: manifest.json
+  summary_name: run_summary.json
+  dataset_readme_name: README.md
+
+hub:
+  push: false
+  repo_id: null
+  private: true
+  revision: main
+  token_env_var: HF_TOKEN
+  commit_message: "Add preprocessed wikipedia dump shards"
+  path_in_repo: data
