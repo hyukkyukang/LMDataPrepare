@@ -1,0 +1,18 @@
+services:
+  lm_data_prepare:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    image: lm_data_prepare:local
+    container_name: lm_data_prepare
+    stdin_open: true
+    tty: true
+    shm_size: 8gb
+    environment:
+      - TZ=Asia/Seoul
+      - PYTHONPATH=/workspace
+    user: "${UID:-1000}:${GID:-1000}"
+    volumes:
+      - ..:/workspace
+    working_dir: /workspace
+    command: bash

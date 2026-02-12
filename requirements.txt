@@ -6,3 +6,6 @@ pyarrow
 huggingface_hub
 mwparserfromhell
 pytest
+lmdb
+fasttext
+pytest-benchmark

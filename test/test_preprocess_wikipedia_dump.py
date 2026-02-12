@@ -3,6 +3,7 @@ import xml.etree.ElementTree as ET
 from pathlib import Path
 
 from script.preprocess.preprocess_wikipedia_dump import (
+    _limit_chunk_by_max_rows,
     extract_wikipedia_page,
     iter_wikipedia_pages,
 )
@@ -46,3 +47,28 @@ def test_iter_wikipedia_pages_reads_bz2(tmp_path: Path) -> None:
     pages = list(iter_wikipedia_pages(dump_path, namespace=0, include_redirects=False))
     assert len(pages) == 1
     assert pages[0]["title"] == "Valid A"
+
+
+def test_limit_chunk_by_max_rows_enforces_budget() -> None:
+    chunk = [
+        {"id": "1", "title": "A", "text": "x"},
+        {"id": "2", "title": "B", "text": "y"},
+        {"id": "3", "title": "C", "text": "z"},
+    ]
+    limited = _limit_chunk_by_max_rows(
+        chunk,
+        newly_processed_rows=4,
+        max_rows=5,
+    )
+    assert len(limited) == 1
+    assert limited[0]["id"] == "1"
+
+
+def test_limit_chunk_by_max_rows_returns_empty_when_budget_exhausted() -> None:
+    chunk = [{"id": "1", "title": "A", "text": "x"}]
+    limited = _limit_chunk_by_max_rows(
+        chunk,
+        newly_processed_rows=5,
+        max_rows=5,
+    )
+    assert limited == []

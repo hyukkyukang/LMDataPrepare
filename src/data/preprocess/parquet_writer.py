@@ -1,4 +1,5 @@
 import json
+from collections import deque
 from pathlib import Path
 from typing import Any
 
@@ -18,6 +19,7 @@ class ParquetShardWriter:
         compression: str,
         extension: str,
         start_index: int = 0,
+        schema: pa.Schema | None = None,
     ) -> None:
         self.output_dir: Path = Path(output_dir)
         self.output_dir.mkdir(parents=True, exist_ok=True)
@@ -26,7 +28,8 @@ class ParquetShardWriter:
         self.compression: str = str(compression)
         self.extension: str = str(extension)
         self.shard_index: int = int(start_index)
-        self._buffer: list[dict[str, Any]] = []
+        self.schema: pa.Schema | None = schema
+        self._buffer: deque[dict[str, Any]] = deque()
         self.total_rows: int = 0
         self.shards: list[dict[str, Any]] = []
 
@@ -35,14 +38,16 @@ class ParquetShardWriter:
             return
         self._buffer.extend(rows)
         while len(self._buffer) >= self.shard_target_rows:
-            shard_rows: list[dict[str, Any]] = self._buffer[: self.shard_target_rows]
-            self._buffer = self._buffer[self.shard_target_rows :]
+            shard_rows: list[dict[str, Any]] = [
+                self._buffer.popleft() for _ in range(self.shard_target_rows)
+            ]
             self._write_shard(shard_rows)
 
     def flush(self) -> None:
         if self._buffer:
-            self._write_shard(self._buffer)
-            self._buffer = []
+            remaining_rows: list[dict[str, Any]] = list(self._buffer)
+            self._write_shard(remaining_rows)
+            self._buffer.clear()
 
     def _write_shard(self, rows: list[dict[str, Any]]) -> None:
         shard_name: str = (
@@ -54,7 +59,7 @@ class ParquetShardWriter:
                 "Refusing to overwrite existing shard file: "
                 f"{shard_path}. Check resume state."
             )
-        table: pa.Table = pa.Table.from_pylist(rows)
+        table: pa.Table = pa.Table.from_pylist(rows, schema=self.schema)
         pq.write_table(table, shard_path, compression=self.compression)
         row_count: int = len(rows)
         self.shards.append(

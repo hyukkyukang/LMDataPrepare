@@ -31,11 +31,56 @@ processing:
   min_body_chars: 20
   drop_empty_title: false
   normalize_whitespace: true
+  malformed_row_policy: skip
+
+filtering:
+  enabled: true
+  body_field: body
+  title_field: title
+  canonical_fields:
+    - body
+  require_non_empty_title: ${processing.drop_empty_title}
+  min_body_chars: ${processing.min_body_chars}
+  max_body_chars: null
+  enable_pii_redaction: false
+  pii_block_on_match: false
+  boilerplate_patterns: []
+
+dedup:
+  exact:
+    enabled: true
+    path: ${output.output_dir}/dedup_exact.lmdb
+    map_size_bytes: 17179869184
+    batch_size: 5000
+  near:
+    enabled: true
+    path: ${output.output_dir}/dedup_near.lmdb
+    map_size_bytes: 17179869184
+    batch_size: 2000
+    simhash_bits: 64
+    band_bits: 16
+    hamming_threshold: 3
+    max_candidates_per_doc: 128
+
+quality:
+  enabled: false
+  model_path: null
+  positive_label: __label__high_quality
+  min_score: 0.5
+  cache_by_hash: true
+
+performance:
+  processpool_chunksize_divisor: 4
+  processpool_min_chunksize: 64
+  state_save_interval_rows: 50000
+  state_save_interval_seconds: 30
+  enable_stage_timing: true
 
 output:
   output_dir: data/processed
   file_prefix: data
   shard_target_rows: 200000
+  use_fixed_schema: true
   parquet_compression: zstd
   parquet_extension: parquet
   manifest_name: manifest.json

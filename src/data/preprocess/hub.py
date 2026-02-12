@@ -6,6 +6,19 @@ from huggingface_hub import HfApi
 from huggingface_hub.utils import HfHubHTTPError
 
 
+def _summary_to_lines(prefix: str, value: Any) -> list[str]:
+    if isinstance(value, dict):
+        lines: list[str] = []
+        for key in sorted(value.keys()):
+            nested_prefix: str = f"{prefix}.{key}" if prefix else str(key)
+            lines.extend(_summary_to_lines(nested_prefix, value[key]))
+        return lines
+    if isinstance(value, list):
+        text_value: str = ", ".join(str(item) for item in value)
+        return [f"- `{prefix}`: [{text_value}]"]
+    return [f"- `{prefix}`: {value}"]
+
+
 def build_dataset_card(
     *,
     title: str,
@@ -15,8 +28,8 @@ def build_dataset_card(
 ) -> str:
     schema_text: str = ", ".join(schema_fields)
     summary_lines: list[str] = []
-    for key, value in summary.items():
-        summary_lines.append(f"- `{key}`: {value}")
+    for key in sorted(summary.keys()):
+        summary_lines.extend(_summary_to_lines(str(key), summary[key]))
     summary_block: str = "\n".join(summary_lines)
     return (
         f"# {title}\n\n"

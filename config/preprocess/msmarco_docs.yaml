@@ -24,7 +24,29 @@ processing:
   min_body_chars: 20
   drop_empty_title: false
   normalize_whitespace: true
-  malformed_row_policy: skip
+
+filtering:
+  body_field: body
+  title_field: title
+  canonical_fields:
+    - body
+  require_non_empty_title: ${processing.drop_empty_title}
+  min_body_chars: ${processing.min_body_chars}
+  max_body_chars: null
+  enable_pii_redaction: true
+  pii_block_on_match: false
+  boilerplate_patterns: []
+
+dedup:
+  exact:
+    enabled: true
+  near:
+    enabled: true
+    hamming_threshold: 3
+    max_candidates_per_doc: 128
+
+quality:
+  enabled: false
 
 output:
   output_dir: data/processed/msmarco_docs
